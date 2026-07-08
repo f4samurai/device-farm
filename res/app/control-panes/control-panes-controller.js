@@ -37,6 +37,12 @@ module.exports =
         icon: 'fa-info color-orange',
         templateUrl: 'control-panes/info/info.pug',
         filters: ['native', 'web']
+      },
+      {
+        title: gettext('AirTest'),
+        icon: 'fa-android color-green',
+        templateUrl: 'control-panes/airtest/airtest.pug',
+        filters: ['native', 'web']
       }
     ]
 
