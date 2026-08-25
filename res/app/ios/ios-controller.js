@@ -22,6 +22,12 @@ module.exports =
     $scope.wrapStyle = {}
     $scope.imgStyle = {}
 
+    // 1x1 の透明 GIF。<img> を DOM から外しただけでは
+    // multipart ストリームの受信が止まらずソケットが残るため、
+    // src をこれに差し替えてブラウザ側に中断させる。
+    var BLANK_IMAGE = 'data:image/gif;base64,' +
+      'R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
     var drag = null
     var imgEl = null
     var frameSize = null
@@ -229,7 +235,15 @@ module.exports =
     })
 
     $scope.$on('$destroy', function() {
-      // <img> を外して MJPEG の接続を切る
+      // ページを離れるときは必ずストリームを止める。
+      // 放置するとブラウザの同時接続数（1ホスト6本）を食い潰し、
+      // やがて /ios/devices すら通らなくなる
+      // 1枚目が届く前に離れた場合は onload が来ておらず imgEl が空なので、
+      // DOM から引き直す。切り替えが速いとこの経路に入る
+      var img = imgEl || document.querySelector('.stf-ios-wrap img')
+      if (img) {
+        img.src = BLANK_IMAGE
+      }
       $scope.streamUrl = null
       // 他のモジュールのハンドラまで外さないよう自分の分だけ指定する
       angular.element($window).off('resize', onResize)
