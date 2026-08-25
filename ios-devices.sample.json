@@ -1,11 +1,21 @@
 {
   "devices": [
     {
-      "id": "iphone",
-      "name": "iPhone (このマシンに USB 接続)",
+      "id": "iphone1",
+      "name": "iPhone (1台目)",
       "udid": "00000000-0000000000000000",
       "wdaUrl": "http://127.0.0.1:8100",
       "mjpegUrl": "http://127.0.0.1:9100",
+      "fixOrientation": false,
+      "framerate": 30,
+      "quality": 25
+    },
+    {
+      "id": "iphone2",
+      "name": "iPhone (2台目)",
+      "udid": "11111111-1111111111111111",
+      "wdaUrl": "http://127.0.0.1:8101",
+      "mjpegUrl": "http://127.0.0.1:9101",
       "fixOrientation": false,
       "framerate": 30,
       "quality": 25
