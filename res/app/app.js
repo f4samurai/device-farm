@@ -16,6 +16,7 @@ require.ensure([], function(require) {
     require('./device-list').name,
     require('./group-list').name,
     require('./control-panes').name,
+    require('./ios').name,
     require('./menu').name,
     require('./settings').name,
     require('./docs').name,

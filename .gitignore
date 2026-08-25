@@ -16,3 +16,6 @@
 package-lock.json
 yarn.lock
 /test-results/
+
+# 環境ごとの iOS 端末設定（ios-devices.sample.json を複製して使う）
+ios-devices.json

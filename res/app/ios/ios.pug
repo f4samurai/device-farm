@@ -1,0 +1,75 @@
+//
+  iOS 端末の画面と操作。STF のデバイス一覧とは別系統で、
+  ios-devices.json に書いた WDA を直接見ている。
+//
+
+.stf-ios
+  .row
+    .col-md-12
+      .widget-container.fluid-height
+        .heading
+          i.fa.fa-apple.color-gray
+          span(translate) iOS Devices
+
+        .widget-content.padded
+
+          .alert.alert-warning(ng-if='devices.length === 0')
+            span(translate) 設定された iOS 端末がありません。
+            code ios-devices.json
+            span(translate) を作成してください。
+
+          .btn-group(ng-if='devices.length > 0')
+            button.btn.btn-sm(
+              ng-repeat='device in devices'
+              ng-class="device === current ? 'btn-primary' : 'btn-default-outline'"
+              ng-click='select(device)')
+              i.fa.fa-mobile
+              span  {{ device.name }}
+
+          .stf-ios-body(ng-if='current')
+            .stf-ios-screen
+              .stf-ios-wrap(
+                ng-style='wrapStyle'
+                ng-mousedown='onMouseDown($event)'
+                ng-mouseup='onMouseUp($event)')
+                img(
+                  ng-if='streamUrl'
+                  ng-src='{{ streamUrl }}'
+                  ng-style='imgStyle'
+                  onerror='angular.element(this).scope().onStreamError()')
+
+            .stf-ios-side
+              .alert.alert-danger(ng-if='error') {{ error }}
+
+              p.text-muted(ng-if='state')
+                span(translate) 画面サイズ
+                | : {{ state.windowSize.width }} x {{ state.windowSize.height }} pt
+                br
+                span(translate) 向き
+                | : {{ state.orientation }}
+
+              .btn-group-vertical.stf-ios-buttons
+                button.btn.btn-sm.btn-default-outline(ng-click='pressHome()')
+                  i.fa.fa-circle-o
+                  span(translate)  ホーム
+                button.btn.btn-sm.btn-default-outline(ng-click='reload()')
+                  i.fa.fa-refresh
+                  span(translate)  再接続
+                button.btn.btn-sm.btn-default-outline(
+                  ng-if='rotated'
+                  ng-click='flipRotation()')
+                  i.fa.fa-rotate-right
+                  span(translate)  向きを反転
+
+              .input-group.stf-ios-text
+                input.form-control.input-sm(
+                  type='text'
+                  ng-model='text'
+                  ng-keyup='$event.keyCode === 13 && sendText()'
+                  placeholder='{{ "テキストを送信" | translate }}')
+                span.input-group-btn
+                  button.btn.btn-sm.btn-primary(ng-click='sendText()')
+                    i.fa.fa-keyboard-o
+
+              p.text-muted.stf-ios-hint(translate)
+                | クリックでタップ、ドラッグでスワイプします。
