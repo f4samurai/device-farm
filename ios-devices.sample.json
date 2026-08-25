@@ -1,11 +1,11 @@
 {
   "devices": [
     {
-      "id": "iphone11",
-      "name": "iPhone 11 (MC00110)",
-      "udid": "00008030-000104A91A80802E",
-      "wdaUrl": "http://192.168.33.205:8100",
-      "mjpegUrl": "http://192.168.33.205:49657",
+      "id": "iphone",
+      "name": "iPhone (このマシンに USB 接続)",
+      "udid": "00000000-0000000000000000",
+      "wdaUrl": "http://127.0.0.1:8100",
+      "mjpegUrl": "http://127.0.0.1:9100",
       "fixOrientation": false
     }
   ]
