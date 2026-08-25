@@ -6,7 +6,9 @@
       "udid": "00000000-0000000000000000",
       "wdaUrl": "http://127.0.0.1:8100",
       "mjpegUrl": "http://127.0.0.1:9100",
-      "fixOrientation": false
+      "fixOrientation": false,
+      "framerate": 30,
+      "quality": 25
     }
   ]
 }
