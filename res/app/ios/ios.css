@@ -47,3 +47,29 @@
 .stf-ios-hint {
   font-size: 12px;
 }
+
+/* ドラッグ中に出す方向線。実時間で画面が動かないぶんの手応え */
+.stf-ios-dragline {
+  position: absolute;
+  height: 2px;
+  background: rgba(90, 190, 255, 0.85);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.stf-ios-dragline::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(90, 190, 255, 0.85);
+}
+
+.stf-ios-health {
+  font-size: 12px;
+  margin-bottom: 10px;
+}

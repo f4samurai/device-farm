@@ -13,6 +13,7 @@ module.exports =
     $scope.state = null
     $scope.streamUrl = null
     $scope.error = null
+    $scope.health = null
     $scope.text = ''
     // 端末が横向きのとき MJPEG は縦のまま流れてくるので表示側で回す。
     // 反時計回りが正しいことは WDA の向き補正済みスクリーンショットと
@@ -29,6 +30,7 @@ module.exports =
       'R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
 
     var drag = null
+    var dragLine = null
     var imgEl = null
     var frameSize = null
     var poll = null
@@ -115,6 +117,24 @@ module.exports =
         layout()
       }
       loadState()
+      checkHealth()
+    }
+
+    // 端末が外れても映像は最後のフレームで止まるだけで、
+    // <img> の onerror も来ない。どの層で切れたかをここで拾う。
+    function checkHealth() {
+      if (!$scope.current) {
+        return
+      }
+
+      $http.get('/ios/' + $scope.current.id + '/health').then(function(res) {
+        $scope.health = res.data
+      }).catch(function() {
+        $scope.health = {
+          status: 'unreachable'
+        , detail: 'サーバに問い合わせできません'
+        }
+      })
     }
 
     $scope.onStreamLoad = function(img) {
@@ -131,6 +151,7 @@ module.exports =
       $scope.current = device
       $scope.state = null
       $scope.error = null
+      $scope.health = null
       imgEl = null
       frameSize = null
       $scope.rotated = false
@@ -163,11 +184,68 @@ module.exports =
       }
     }
 
+    // 実時間で画面が追従させられないぶん、ブラウザ側に線を描いて
+    // ドラッグを拾っていることが分かるようにする。
+    // WDA には minitouch のような押しっぱなしを保持する経路が無く、
+    // ジェスチャは指を離した時点で1リクエストとして送るしかない。
+    function showDragLine(rect, from, to) {
+      if (!dragLine) {
+        dragLine = document.querySelector('.stf-ios-dragline')
+      }
+      if (!dragLine) {
+        return
+      }
+      var dx = to.x - from.x
+      var dy = to.y - from.y
+      dragLine.setAttribute('style',
+        'display:block' +
+        ';left:' + (from.x - rect.left) + 'px' +
+        ';top:' + (from.y - rect.top) + 'px' +
+        ';width:' + Math.sqrt(dx * dx + dy * dy) + 'px' +
+        ';transform:rotate(' + Math.atan2(dy, dx) + 'rad)')
+    }
+
+    function hideDragLine() {
+      if (dragLine) {
+        dragLine.setAttribute('style', 'display:none')
+      }
+    }
+
     $scope.onMouseDown = function(event) {
       if (!$scope.state) {
         return
       }
-      drag = {point: toPoint(event), at: new Date().getTime()}
+      var now = new Date().getTime()
+      drag = {
+        point: toPoint(event)
+      , at: now
+      , lastAt: now
+        // 端末に送る座標の並び。先頭は押した位置
+      , path: [toPoint(event)]
+      , origin: {x: event.clientX, y: event.clientY}
+      }
+    }
+
+    $scope.onMouseMove = function(event) {
+      if (!drag) {
+        return
+      }
+
+      var now = new Date().getTime()
+      var point = toPoint(event)
+      var last = drag.path[drag.path.length - 1]
+
+      // 同じ場所での細かい揺れは送らない
+      if (Math.abs(point.x - last.x) + Math.abs(point.y - last.y) >= 2) {
+        point.dt = now - drag.lastAt
+        drag.lastAt = now
+        drag.path.push(point)
+      }
+
+      showDragLine(
+        event.currentTarget.getBoundingClientRect()
+      , drag.origin
+      , {x: event.clientX, y: event.clientY})
     }
 
     $scope.onMouseUp = function(event) {
@@ -179,12 +257,25 @@ module.exports =
       var start = drag.point
       var elapsed = (new Date().getTime() - drag.at) / 1000
       var moved = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
+      var path = drag.path
+
+      // 最後の位置が軌跡に入っていなければ足す
+      var tail = path[path.length - 1]
+      if (tail.x !== end.x || tail.y !== end.y) {
+        end.dt = new Date().getTime() - drag.lastAt
+        path.push(end)
+      }
+
       drag = null
+      hideDragLine()
 
       // 10pt 以上動いていたらスワイプ、そうでなければタップ
       if (moved > 10) {
+        // なぞった軌跡をそのまま送る。直線に潰すと曲線や
+        // フリックの勢いが失われるため
         post('/swipe', {
-          fromX: start.x
+          points: path
+        , fromX: start.x
         , fromY: start.y
         , toX: end.x
         , toY: end.y
@@ -193,6 +284,13 @@ module.exports =
       }
       else {
         post('/tap', {x: start.x, y: start.y})
+      }
+    }
+
+    $scope.onMouseLeave = function() {
+      if (drag) {
+        drag = null
+        hideDragLine()
       }
     }
 

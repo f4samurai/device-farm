@@ -31,16 +31,32 @@
               .stf-ios-wrap(
                 ng-style='wrapStyle'
                 ng-mousedown='onMouseDown($event)'
-                ng-mouseup='onMouseUp($event)')
+                ng-mousemove='onMouseMove($event)'
+                ng-mouseup='onMouseUp($event)'
+                ng-mouseleave='onMouseLeave()')
                 img(
                   ng-if='streamUrl'
                   ng-src='{{ streamUrl }}'
                   ng-style='imgStyle'
                   onload='angular.element(this).scope().onStreamLoad(this)'
                   onerror='angular.element(this).scope().onStreamError()')
+                //- ドラッグ中の方向を示す線。画面自体は指を離すまで動かない
+                .stf-ios-dragline(style='display:none')
 
             .stf-ios-side
               .alert.alert-danger(ng-if='error') {{ error }}
+
+              //- どの層で切れているかを出す。単に「繋がらない」だと
+              //-  USB / iproxy / WDA のどれか分からないため
+              .alert.alert-warning.stf-ios-health(
+                ng-if='health && health.status !== "ok"')
+                strong(ng-switch='health.status')
+                  span(ng-switch-when='forward_down', translate) 端末が外れています
+                  span(ng-switch-when='wda_down', translate) WDA が応答しません
+                  span(ng-switch-when='stale', translate) 映像が止まっています
+                  span(ng-switch-default, translate) 異常
+                br
+                span {{ health.detail }}
 
               p.text-muted(ng-if='state')
                 span(translate) 画面サイズ
