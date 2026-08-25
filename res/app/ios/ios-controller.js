@@ -6,7 +6,7 @@
 **/
 
 module.exports =
-  function IosCtrl($scope, $http, $timeout, $window, $q) {
+  function IosCtrl($scope, $http, $timeout, $interval, $window, $q) {
 
     $scope.devices = []
     $scope.current = null
@@ -23,6 +23,9 @@ module.exports =
     $scope.imgStyle = {}
 
     var drag = null
+    var imgEl = null
+    var frameSize = null
+    var poll = null
 
     function post(path, body) {
       if (!$scope.current) {
@@ -68,6 +71,19 @@ module.exports =
       }
     }
 
+    // MJPEG が回転済みで来るかどうかは WDA の mjpegFixOrientation 次第で、
+    // Airtest など他の利用者が実行中に切り替えることがある。
+    // ウィンドウの向きだけで決め打ちせず、実際のフレームの縦横と突き合わせる。
+    function updateRotation() {
+      if (!$scope.state || !frameSize || !frameSize.w || !frameSize.h) {
+        $scope.rotated = false
+        return
+      }
+
+      var size = $scope.state.windowSize
+      $scope.rotated = (frameSize.w > frameSize.h) !== (size.width > size.height)
+    }
+
     function loadState() {
       if (!$scope.current) {
         return
@@ -75,19 +91,43 @@ module.exports =
 
       $http.get('/ios/' + $scope.current.id + '/state').then(function(res) {
         $scope.state = res.data
-        // 画面は縦長なのにウィンドウが横長 = MJPEG が回っていない
-        $scope.rotated = !res.data.fixOrientation &&
-          res.data.windowSize.width > res.data.windowSize.height
+        updateRotation()
         layout()
       }).catch(function(res) {
         $scope.error = (res.data && res.data.description) || 'WDA に接続できません'
       })
     }
 
+    // 端末が回されたり、上流の向き補正が切り替わっても追従できるように、
+    // ウィンドウサイズとフレームの実寸を定期的に見直す。
+    function watch() {
+      if (imgEl && imgEl.naturalWidth &&
+          (!frameSize || frameSize.w !== imgEl.naturalWidth ||
+           frameSize.h !== imgEl.naturalHeight)) {
+        frameSize = {w: imgEl.naturalWidth, h: imgEl.naturalHeight}
+        updateRotation()
+        layout()
+      }
+      loadState()
+    }
+
+    $scope.onStreamLoad = function(img) {
+      imgEl = img
+      frameSize = {w: img.naturalWidth, h: img.naturalHeight}
+      updateRotation()
+      layout()
+      if (!$scope.$$phase) {
+        $scope.$apply()
+      }
+    }
+
     $scope.select = function(device) {
       $scope.current = device
       $scope.state = null
       $scope.error = null
+      imgEl = null
+      frameSize = null
+      $scope.rotated = false
       // 同じ URL だとブラウザが前の接続を使い回すことがあるので毎回変える
       $scope.streamUrl = '/ios/' + device.id + '/screen.mjpeg?t=' + new Date().getTime()
       loadState()
@@ -177,6 +217,8 @@ module.exports =
 
     angular.element($window).on('resize', onResize)
 
+    poll = $interval(watch, 3000)
+
     $http.get('/ios/devices').then(function(res) {
       $scope.devices = res.data.devices
       if ($scope.devices.length === 1) {
@@ -191,6 +233,9 @@ module.exports =
       $scope.streamUrl = null
       // 他のモジュールのハンドラまで外さないよう自分の分だけ指定する
       angular.element($window).off('resize', onResize)
+      if (poll) {
+        $interval.cancel(poll)
+      }
     })
 
     $timeout(layout)

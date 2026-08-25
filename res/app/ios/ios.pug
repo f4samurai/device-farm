@@ -36,6 +36,7 @@
                   ng-if='streamUrl'
                   ng-src='{{ streamUrl }}'
                   ng-style='imgStyle'
+                  onload='angular.element(this).scope().onStreamLoad(this)'
                   onerror='angular.element(this).scope().onStreamError()')
 
             .stf-ios-side
