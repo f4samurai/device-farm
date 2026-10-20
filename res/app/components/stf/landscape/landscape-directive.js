@@ -1,15 +1,9 @@
 module.exports =
   function landscapeDirective(BrowserInfo, $document, $window) {
     return {
-      restrict: 'A',
-      link: function(scope) {
+      restrict: 'A'
+      , link: function(scope) {
         var body = angular.element($document[0].body)
-
-        if (typeof $window.orientation !== 'undefined') {
-          if ($window.orientation !== 0) {
-            rotateGuest(false)
-          }
-        }
 
         function rotateGuest(portrait) {
           if (portrait) {
@@ -17,13 +11,20 @@ module.exports =
             body.removeClass('guest-landscape')
 
             scope.$broadcast('guest-portrait')
-          } else {
+          }
+          else {
             body.addClass('guest-landscape')
             body.removeClass('guest-portrait')
 
             scope.$broadcast('guest-landscape')
 
             $window.scrollTo(0, 0)
+          }
+        }
+
+        if (typeof $window.orientation !== 'undefined') {
+          if ($window.orientation !== 0) {
+            rotateGuest(false)
           }
         }
 

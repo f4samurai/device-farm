@@ -19,6 +19,7 @@ var ICON = {
 var CHECK_ICON = {
   pass: ':white_check_mark:'
 , fail: ':x:'
+, warn: ':warning:'
 , skip: ':heavy_minus_sign:'
 , 'n/a': ':heavy_minus_sign:'
 }
@@ -32,6 +33,7 @@ var CORE_LABELS = {
 , component: 'Component tests (karma + AngularJS)'
 , integration:
     'Integration + device-less E2E (stf local + RethinkDB + Playwright)'
+, compose: 'Docker Compose + AVD + Playwright (Android 16, API 36)'
 }
 
 var CORE_ORDER = Object.keys(CORE_LABELS)
@@ -244,6 +246,21 @@ function main() {
     problems.forEach(function(v) {
       lines.push('- **' + v.label + '**: ' + v.details)
     })
+    lines.push('')
+  }
+
+  // A leg that only went green on its second attempt is still a flake, and a
+  // silent retry would turn a degrading emulator or test into a tick nobody
+  // ever looks at. Name them so the trend stays visible.
+  var retried = android.filter(function(v) {
+    return Number(v.attempt || 1) > 1
+  })
+  if (retried.length) {
+    lines.push('> :repeat: Retried once after failing: ' +
+      retried.map(function(v) {
+        return 'Android ' + v.android + ' (API ' + v.api + ', now ' +
+          v.status + ')'
+      }).join(', ') + '.')
     lines.push('')
   }
 

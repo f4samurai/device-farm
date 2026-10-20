@@ -11,6 +11,7 @@ module.exports = function DeviceServiceFactory($http, socket, EnhanceDeviceServi
   var deviceService = {}
 
   function Tracker($scope, options) {
+    EventEmitter.call(this)
     var devices = []
     var devicesBySerial = Object.create(null)
     var scopedSocket = socket.scoped($scope)
@@ -37,7 +38,7 @@ module.exports = function DeviceServiceFactory($http, socket, EnhanceDeviceServi
 
       if (event.important) {
         // Handle important updates immediately.
-        //digest()
+        // digest()
         window.requestAnimationFrame(digest)
       }
       else {
@@ -108,31 +109,6 @@ module.exports = function DeviceServiceFactory($http, socket, EnhanceDeviceServi
       }
     }.bind(this)
 
-    function fetch(data) {
-      deviceService.load(data.serial)
-        .then(function(device) {
-          return changeListener({
-            important: true
-          , data: device
-          })
-        })
-        .catch(function() {})
-    }
-
-    function addListener(event) {
-      var device = get(event.data)
-      if (device) {
-        modify(device, event.data)
-        notify(event)
-      }
-      else {
-        if (options.filter(event.data)) {
-          insert(event.data)
-          notify(event)
-        }
-      }
-    }
-
     function changeListener(event) {
       var device = get(event.data)
       if (device) {
@@ -157,6 +133,33 @@ module.exports = function DeviceServiceFactory($http, socket, EnhanceDeviceServi
         }
       }
       **/
+    }
+
+    // the only call site is the commented-out block above, kept with it
+    // eslint-disable-next-line no-unused-vars
+    function fetch(data) {
+      deviceService.load(data.serial)
+        .then(function(device) {
+          return changeListener({
+            important: true
+          , data: device
+          })
+        })
+        .catch(function() {})
+    }
+
+    function addListener(event) {
+      var device = get(event.data)
+      if (device) {
+        modify(device, event.data)
+        notify(event)
+      }
+      else {
+        if (options.filter(event.data)) {
+          insert(event.data)
+          notify(event)
+        }
+      }
     }
 
     scopedSocket.on('device.add', addListener)
@@ -268,8 +271,8 @@ module.exports = function DeviceServiceFactory($http, socket, EnhanceDeviceServi
 
   deviceService.updateNote = function(serial, note) {
     socket.emit('device.note', {
-      serial: serial,
-      note: note
+      serial: serial
+      , note: note
     })
   }
 

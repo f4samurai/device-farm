@@ -1,9 +1,13 @@
 //
-// The layered device checks, most fundamental first, in one place.
+// The per-leg check columns, in the order a leg proves them, in one place.
 //
 // The order is semantic: android-verdict.js names the deepest layer that broke
 // by walking it, and render-report.js renders one table column per entry in the
 // same order. Splitting the list across files let the two disagree.
+//
+// The first nine are device capability, most fundamental first. `teardown` is
+// last because it is about the runner rather than the device, and it is only
+// knowable once the leg script has exited.
 //
 // usage: node checks.js seed <checks.json>
 //
@@ -51,6 +55,17 @@ var LAYERS = [
   , blurb: 'STF offered it as `Use` and handed over control'
   }
 , {
+    key: 'subscriber_properties'
+  , label: 'SIM IDs'
+  , seed: 'skip'
+  , gating: true
+  , failure: 'the SIM identifiers never reached the device document'
+  , blurb: 'imei, imsi, iccid and phoneNumber landed on the device ' +
+      'document, which from API 23 up needs an STFService build whose agent ' +
+      'answers `--telephony` (a leg whose emulator reports no usable SIM ' +
+      'records a pass, because there is nothing to read)'
+  }
+, {
     key: 'screen_stream'
   , label: 'Screen'
   , seed: 'skip'
@@ -85,6 +100,14 @@ var LAYERS = [
   , gating: true
   , failure: 'the web UI suite failed'
   , blurb: 'the rest of the Playwright web UI suite'
+  }
+, {
+    key: 'teardown'
+  , label: 'Teardown'
+  , seed: 'skip'
+  , gating: false
+  , failure: 'the emulator step did not exit cleanly after every check had passed'
+  , blurb: 'the emulator action shut the AVD down and exited on its own'
   }
 ]
 
