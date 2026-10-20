@@ -3,12 +3,19 @@
 *
 * 画面は WDA の MJPEG をサーバ側で中継したものを <img> で受ける。
 * 操作は正規化した座標を WDA の point 座標に直して投げる。
+*
+* 操作できるのは STF でその端末を占有している本人だけ（Android の操作画面と同じ）。
+* 端末一覧から来たときは空いていれば占有し、他人が使用中か ?view なら閲覧のみで開く。
 **/
 
 module.exports =
-  function IosCtrl($scope, $http, $timeout, $interval, $window, $q) {
+  function IosCtrl($scope, $http, $timeout, $interval, $window, $q,
+    $routeParams, $location, DeviceService, GroupService) {
     $scope.devices = []
     $scope.current = null
+    // STF 側の端末（所有者・状態が実時間で更新される）。UDID が無い端末は STF に載らない
+    $scope.stf = null
+    $scope.stfMissing = false
     $scope.state = null
     $scope.streamUrl = null
     $scope.error = null
@@ -33,13 +40,97 @@ module.exports =
     var imgEl = null
     var frameSize = null
     var poll = null
+    // 一覧から開いたときだけ、空いていれば占有する（ボタンで端末を切り替えたときは ?view で来る）
+    var autoTake = Boolean($routeParams.serial)
+    var lastKeepalive = 0
+    // STF は --group-timeout（既定 15 分）操作が無いと占有を外す。操作は WDA へ直接行き
+    // ios-provider には届かないので、操作している間はこの間隔で同じ人の invite を送って延ばす
+    var KEEPALIVE_MS = 60000
+
+    $scope.canControl = function() {
+      return Boolean($scope.stf && $scope.stf.using)
+    }
+
+    function keepalive() {
+      var now = Date.now()
+      if (!$scope.stf || now - lastKeepalive < KEEPALIVE_MS) {
+        return
+      }
+      lastKeepalive = now
+      GroupService.invite($scope.stf).catch(function() {
+        // 外れていれば画面の表示（閲覧のみ）が切り替わるのでここでは何もしない
+      })
+    }
+
+    function showError(message) {
+      $scope.$applyAsync(function() {
+        $scope.error = message
+      })
+    }
+
+    $scope.take = function() {
+      if (!$scope.stf) {
+        return
+      }
+      $location.search('view', null).replace()
+      GroupService.invite($scope.stf)
+        .then(function() {
+          lastKeepalive = Date.now()
+        })
+        .catch(function(err) {
+          showError('使用できませんでした: ' + err.message)
+        })
+    }
+
+    $scope.release = function() {
+      if (!$scope.stf) {
+        return
+      }
+      // 離したあとに再読み込みしても占有し直さないよう ?view を付けておく
+      $location.search('view', true).replace()
+      GroupService.kick($scope.stf).catch(function(err) {
+        showError('使用をやめられませんでした: ' + err.message)
+      })
+    }
+
+    function attachStf(device) {
+      $scope.stf = null
+      $scope.stfMissing = false
+
+      if (!device.udid) {
+        $scope.stfMissing = true
+        return
+      }
+
+      DeviceService.get(device.udid, $scope)
+        .then(function(stfDevice) {
+          if ($scope.current !== device) {
+            return
+          }
+          $scope.stf = stfDevice
+          if (autoTake && !('view' in $location.search()) &&
+              stfDevice.state === 'available') {
+            $scope.take()
+          }
+          autoTake = false
+        })
+        .catch(function() {
+          if ($scope.current === device) {
+            $scope.stfMissing = true
+          }
+        })
+    }
 
     function post(path, body) {
-      if (!$scope.current) {
+      if (!$scope.current || !$scope.canControl()) {
         return $q.when(null)
       }
       $scope.error = null
       return $http.post('/ios/' + $scope.current.id + path, body)
+        .then(function(res) {
+          keepalive()
+          return res
+        })
         .catch(function(res) {
           $scope.error = (res.data && res.data.description) || '操作に失敗しました'
         })
@@ -157,6 +248,15 @@ module.exports =
       // 同じ URL だとブラウザが前の接続を使い回すことがあるので毎回変える
       $scope.streamUrl = '/ios/' + device.id + '/screen.mjpeg?t=' + new Date().getTime()
       loadState()
+      attachStf(device)
+    }
+
+    // 端末の切り替えは URL で行う（一覧の「使う」と同じ入口にそろえる）。閲覧のみで開く
+    $scope.open = function(device, replace) {
+      $location.path('/ios/' + (device.udid || device.id)).search('view', true)
+      if (replace) {
+        $location.replace()
+      }
     }
 
     $scope.reload = function() {
@@ -211,7 +311,7 @@ module.exports =
     }
 
     $scope.onMouseDown = function(event) {
-      if (!$scope.state) {
+      if (!$scope.state || !$scope.canControl()) {
         return
       }
       var now = new Date().getTime()
@@ -324,8 +424,21 @@ module.exports =
 
     $http.get('/ios/devices').then(function(res) {
       $scope.devices = res.data.devices
-      if ($scope.devices.length === 1) {
-        $scope.select($scope.devices[0])
+
+      var key = $routeParams.serial
+      if (key) {
+        var match = $scope.devices.filter(function(device) {
+          return device.udid === key || device.id === key
+        })[0]
+        if (match) {
+          $scope.select(match)
+        }
+        else {
+          $scope.error = 'ios-devices.json に ' + key + ' がありません'
+        }
+      }
+      else if ($scope.devices.length === 1) {
+        $scope.open($scope.devices[0], true)
       }
     }).catch(function() {
       $scope.error = 'iOS 端末の一覧を取得できません'

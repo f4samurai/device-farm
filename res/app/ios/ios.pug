@@ -1,6 +1,6 @@
 //
-  iOS 端末の画面と操作。STF のデバイス一覧とは別系統で、
-  ios-devices.json に書いた WDA を直接見ている。
+  iOS 端末の画面と操作。画面と操作は ios-devices.json に書いた WDA を直接見ている。
+  一覧と占有は STF に載せてあり（ios-provider unit）、操作できるのは占有している本人だけ。
 //
 
 .stf-ios
@@ -22,13 +22,37 @@
             button.btn.btn-sm(
               ng-repeat='device in devices'
               ng-class="device === current ? 'btn-primary' : 'btn-default-outline'"
-              ng-click='select(device)')
+              ng-click='open(device)')
               i.fa.fa-mobile
               span  {{ device.name }}
+
+          //- 占有の状態。Android の閲覧のみ（device-view-only.pug）と同じ並び
+          .stf-ios-owner(ng-if='current')
+            span(ng-if='stfMissing')
+              i.fa.fa-exclamation-triangle
+              |  STF に登録されていないため操作できません（ios-devices.json に udid が必要）
+            span(ng-if='stf && stf.using')
+              i.fa.fa-hand-pointer-o
+              |  使用中（操作できます）
+            span(ng-if='stf && !stf.using')
+              i.fa.fa-eye
+              span(ng-if='stf.owner')  {{ stf.owner.name || stf.owner.email }} が使用中 · 閲覧のみ
+              span(ng-if='!stf.owner')  閲覧のみ
+            .pull-right(ng-if='stf')
+              button.btn.btn-xs.btn-primary(
+                type='button'
+                ng-show='stf.state === "available"'
+                ng-click='take()') 使う
+              button.btn.btn-xs.btn-danger-outline(
+                type='button'
+                ng-show='stf.using'
+                ng-click='release()') 使用をやめる
+              a.btn.btn-xs.btn-default-outline(href='#!/devices') 端末一覧
 
           .stf-ios-body(ng-if='current')
             .stf-ios-screen
               .stf-ios-wrap(
+                ng-class="{'view-only': !canControl()}"
                 ng-style='wrapStyle'
                 ng-mousedown='onMouseDown($event)'
                 ng-mousemove='onMouseMove($event)'
@@ -66,7 +90,9 @@
                 | : {{ state.orientation }}
 
               .btn-group-vertical.stf-ios-buttons
-                button.btn.btn-sm.btn-default-outline(ng-click='pressHome()')
+                button.btn.btn-sm.btn-default-outline(
+                  ng-click='pressHome()'
+                  ng-disabled='!canControl()')
                   i.fa.fa-circle-o
                   span(translate)  ホーム
                 button.btn.btn-sm.btn-default-outline(ng-click='reload()')
@@ -81,12 +107,15 @@
               .input-group.stf-ios-text
                 input.form-control.input-sm(
                   type='text'
+                  ng-disabled='!canControl()'
                   ng-model='text'
                   ng-keyup='$event.keyCode === 13 && sendText()'
                   placeholder='{{ "テキストを送信" | translate }}')
                 span.input-group-btn
-                  button.btn.btn-sm.btn-primary(ng-click='sendText()')
+                  button.btn.btn-sm.btn-primary(
+                    ng-click='sendText()'
+                    ng-disabled='!canControl()')
                     i.fa.fa-keyboard-o
 
-              p.text-muted.stf-ios-hint(translate)
+              p.text-muted.stf-ios-hint(ng-if='canControl()', translate)
                 | クリックでタップ、ドラッグでスワイプします。

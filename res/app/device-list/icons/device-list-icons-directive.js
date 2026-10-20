@@ -1,4 +1,5 @@
 var patchArray = require('./../util/patch-array')
+var controlHref = require('./../util/control-href')
 
 module.exports = function DeviceListIconsDirective(
   $filter
@@ -87,15 +88,15 @@ module.exports = function DeviceListIconsDirective(
         }
 
         if (device.usable && !device.using) {
-          a.href = '#!/control/' + device.serial
+          a.href = controlHref(device)
           li.classList.remove('device-is-busy')
         }
         else if (device.using && device.usable) {
-          a.href = '#!/control/' + device.serial
+          a.href = controlHref(device)
         }
         else if (device.state === 'busy') {
           // 他人が使用中: 閲覧のみで開く（control-panes-controller の viewOnly）
-          a.href = '#!/control/' + device.serial
+          a.href = controlHref(device)
           li.classList.add('device-is-busy')
         }
         else {

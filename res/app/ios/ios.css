@@ -73,3 +73,20 @@
   font-size: 12px;
   margin-bottom: 10px;
 }
+
+.stf-ios-owner {
+  margin-top: 15px;
+  padding: 6px 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  line-height: 22px;
+}
+
+.stf-ios-owner .btn {
+  margin-left: 6px;
+}
+
+/* 閲覧のみ: 押しても何も起きないことを見た目で示す */
+.stf-ios-wrap.view-only {
+  cursor: default;
+}

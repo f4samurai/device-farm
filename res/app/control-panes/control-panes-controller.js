@@ -93,10 +93,16 @@ module.exports =
       }
     }
 
+    // iOS はこの画面（minicap / minitouch 前提）では動かない。占有もしないまま /ios へ回す
+    function IosDeviceError() {}
+
     // TODO: Move this out to Ctrl.resolve
     function getDevice(serial) {
       DeviceService.get(serial, $scope)
         .then(function(device) {
+          if (device.platform === 'iOS') {
+            throw new IosDeviceError()
+          }
           if (isViewOnly(device)) {
             $scope.viewOnly = true
             return device
@@ -120,9 +126,14 @@ module.exports =
 
           return device
         })
-        .catch(function() {
+        .catch(function(err) {
           $timeout(function() {
-            $location.path('/')
+            if (err instanceof IosDeviceError) {
+              $location.path('/ios/' + serial).search($location.search()).replace()
+            }
+            else {
+              $location.path('/')
+            }
           })
         })
     }
