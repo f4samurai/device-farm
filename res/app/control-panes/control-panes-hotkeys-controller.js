@@ -87,6 +87,24 @@ module.exports =
       }
     }
 
+    // 閲覧のみのときは control が無い（null）。端末を操作するキーは何もしない
+    ;[
+      'switchCharset'
+      , 'rotateLeft'
+      , 'rotateRight'
+      , 'pressMenu'
+      , 'pressHome'
+      , 'pressBack'
+      , 'pressAppSwitch'
+    ].forEach(function(name) {
+      var action = actions[name]
+      actions[name] = function() {
+        if ($scope.control) {
+          action.apply(this, arguments)
+        }
+      }
+    })
+
     ScopedHotkeysService($scope, [
       // ['shift+up', gettext('Previous Device'), actions.previousDevice],
       // ['shift+down', gettext('Next Device'), actions.nextDevice],

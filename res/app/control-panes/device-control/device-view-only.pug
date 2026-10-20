@@ -1,0 +1,16 @@
+.stf-view-only.fill-height.fill-width.as-table
+  .stf-view-only-bar.as-row
+    .as-cell
+      i.fa.fa-eye
+      span(ng-if='device.owner && !device.using')
+        |  {{ "In use by" | translate }} {{ device.owner.name || device.owner.email }} · {{ "View only" | translate }}
+      span(ng-if='!device.owner || device.using')
+        |  {{ "View only" | translate }}
+      .pull-right
+        button(type='button', ng-show='device.state === "available"', ng-click='takeControl()').btn.btn-xs.btn-primary
+          | {{ "Use" | translate }}
+        a(href='#!/devices').btn.btn-xs.btn-default-outline
+          | {{ "Back" | translate }}
+  .as-row.fill-height
+    div(ng-controller='DeviceScreenCtrl', ng-if='device').as-cell.fill-height.fill-width
+      device-screen(device='device', control='control', view-only='true').fill-height.fill-width

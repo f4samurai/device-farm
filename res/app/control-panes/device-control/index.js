@@ -14,6 +14,9 @@ module.exports = angular.module('device-control', [
     $templateCache.put('control-panes/device-control/device-control-standalone.pug',
       require('./device-control-standalone.pug')
     )
+    $templateCache.put('control-panes/device-control/device-view-only.pug',
+      require('./device-view-only.pug')
+    )
   }])
   .controller('DeviceControlCtrl', require('./device-control-controller'))
   .directive('deviceControlKey', require('./device-control-key-directive'))

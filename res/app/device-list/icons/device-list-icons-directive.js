@@ -93,6 +93,11 @@ module.exports = function DeviceListIconsDirective(
         else if (device.using && device.usable) {
           a.href = '#!/control/' + device.serial
         }
+        else if (device.state === 'busy') {
+          // 他人が使用中: 閲覧のみで開く（control-panes-controller の viewOnly）
+          a.href = '#!/control/' + device.serial
+          li.classList.add('device-is-busy')
+        }
         else {
           a.removeAttribute('href')
           li.classList.add('device-is-busy')

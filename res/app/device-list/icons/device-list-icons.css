@@ -91,3 +91,9 @@ ul.devices-icon-view .device-name.state-available {
   white-space: normal;
   max-height: 45px;
 }
+
+/* 他人が使用中でも閲覧のみで開ける（リンクがあるものだけ） */
+ul.devices-icon-view .device-is-busy a[href],
+ul.devices-icon-view .device-is-busy a[href] .btn {
+  cursor: pointer;
+}

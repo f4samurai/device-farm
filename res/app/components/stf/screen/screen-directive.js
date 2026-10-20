@@ -16,6 +16,7 @@ module.exports = function DeviceScreenDirective(
   , scope: {
       control: '&'
     , device: '&'
+    , viewOnly: '&'
     }
   , link: function(scope, element) {
       var URL = window.URL || window.webkitURL
@@ -25,6 +26,14 @@ module.exports = function DeviceScreenDirective(
 
       var device = scope.device()
       var control = scope.control()
+      // 閲覧のみ（他人が使用中の端末など）: 画面は流すが、入力系は一切バインドしない。
+      // size も送らない。projection は端末ごとに 1 つで、送ると使用中の人の画面の
+      // 解像度まで変わる（既存の projection のまま相乗りする）
+      var viewOnly = scope.viewOnly() === true
+
+      if (viewOnly) {
+        element.addClass('view-only')
+      }
 
       var input = element.find('input')
 
@@ -96,7 +105,7 @@ module.exports = function DeviceScreenDirective(
         var cachedEnabled = false
 
         function onScreenInterestAreaChanged() {
-          if (ws.readyState === WebSocket.OPEN) {
+          if (ws.readyState === WebSocket.OPEN && !viewOnly) {
             ws.send('size ' + adjustedBoundSize.w + 'x' + adjustedBoundSize.h)
           }
         }
@@ -160,7 +169,7 @@ module.exports = function DeviceScreenDirective(
             // NO if the user has disabled the screen.
             scope.$parent.showScreen &&
             // NO if we're not even using the device anymore.
-            device.using &&
+            (device.using || viewOnly) &&
             // NO if the page is not visible (e.g. background tab).
             !PageVisibilityService.hidden &&
             // NO if we don't have a connection yet.
@@ -171,7 +180,9 @@ module.exports = function DeviceScreenDirective(
 
         function onScreenInterestGained() {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send('size ' + adjustedBoundSize.w + 'x' + adjustedBoundSize.h)
+            if (!viewOnly) {
+              ws.send('size ' + adjustedBoundSize.w + 'x' + adjustedBoundSize.h)
+            }
             ws.send('on')
           }
         }
@@ -366,17 +377,21 @@ module.exports = function DeviceScreenDirective(
         scope.$watch('$parent.showScreen', checkEnabled)
 
         scope.retryLoadingScreen = function() {
-          if (scope.displayError === 'secure') {
+          if (scope.displayError === 'secure' && control) {
             control.home()
           }
         }
 
         scope.$on('guest-portrait', function() {
-          control.rotate(0)
+          if (control) {
+            control.rotate(0)
+          }
         })
 
         scope.$on('guest-landscape', function() {
-          control.rotate(90)
+          if (control) {
+            control.rotate(90)
+          }
         })
 
 
@@ -406,6 +421,10 @@ module.exports = function DeviceScreenDirective(
        * as possible.
        */
       ;(function() {
+        if (viewOnly) {
+          return
+        }
+
         function isChangeCharsetKey(e) {
           // Add any special key here for changing charset
           // console.log('e', e)
@@ -512,6 +531,10 @@ module.exports = function DeviceScreenDirective(
        * as possible.
        */
       ;(function() {
+        if (viewOnly) {
+          return
+        }
+
         var slots = []
         var slotted = Object.create(null)
         var fingers = []

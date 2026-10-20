@@ -302,6 +302,11 @@ function deviceNameCell(options, ownerEmail) {
         a.className = 'device-product-name-usable'
         a.href = '#!/control/' + device.serial
       }
+      else if (device.state === 'busy') {
+        // 他人が使用中: 閲覧のみで開く
+        a.className = 'device-product-name-unusable'
+        a.href = '#!/control/' + device.serial
+      }
       else {
         a.className = 'device-product-name-unusable'
         a.removeAttribute('href')
@@ -351,6 +356,10 @@ function deviceStatusCell(options) {
         (stateClasses[device.state] || 'btn-default-outline')
 
       if (device.usable && !device.using) {
+        a.href = '#!/control/' + device.serial
+      }
+      else if (device.state === 'busy') {
+        // 他人が使用中: 閲覧のみで開く（admin モードのクリックは強制返却が優先）
         a.href = '#!/control/' + device.serial
       }
       else {
