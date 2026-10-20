@@ -58,12 +58,13 @@
                 ng-mousemove='onMouseMove($event)'
                 ng-mouseup='onMouseUp($event)'
                 ng-mouseleave='onMouseLeave()')
+                //- 離れるときに src を空の画像に差し替えると onload がもう一度来るが、そのときは scope が無い
                 img(
                   ng-if='streamUrl'
                   ng-src='{{ streamUrl }}'
                   ng-style='imgStyle'
-                  onload='angular.element(this).scope().onStreamLoad(this)'
-                  onerror='angular.element(this).scope().onStreamError()')
+                  onload='var s = angular.element(this).scope(); s && s.onStreamLoad(this)'
+                  onerror='var s = angular.element(this).scope(); s && s.onStreamError()')
                 //- ドラッグ中の方向を示す線。画面自体は指を離すまで動かない
                 .stf-ios-dragline(style='display:none')
 
