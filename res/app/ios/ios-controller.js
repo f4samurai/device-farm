@@ -7,7 +7,6 @@
 
 module.exports =
   function IosCtrl($scope, $http, $timeout, $interval, $window, $q) {
-
     $scope.devices = []
     $scope.current = null
     $scope.state = null
