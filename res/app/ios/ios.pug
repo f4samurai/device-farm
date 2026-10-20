@@ -7,9 +7,11 @@
   .row
     .col-md-12
       .widget-container.fluid-height
+        //- 端末は STF の端末一覧から選ぶ（ここに切り替えボタンは置かない）。見出しは開いている端末
         .heading
           i.fa.fa-apple.color-gray
-          span(translate) iOS Devices
+          span(ng-if='current')  {{ current.name }}
+          span(ng-if='!current', translate) iOS Devices
 
         .widget-content.padded
 
@@ -17,14 +19,6 @@
             span(translate) 設定された iOS 端末がありません。
             code ios-devices.json
             span(translate) を作成してください。
-
-          .btn-group(ng-if='devices.length > 0')
-            button.btn.btn-sm(
-              ng-repeat='device in devices'
-              ng-class="device === current ? 'btn-primary' : 'btn-default-outline'"
-              ng-click='open(device)')
-              i.fa.fa-mobile
-              span  {{ device.name }}
 
           //- 占有の状態。Android の閲覧のみ（device-view-only.pug）と同じ並び
           .stf-ios-owner(ng-if='current')

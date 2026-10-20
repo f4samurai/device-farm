@@ -251,13 +251,6 @@ module.exports =
       attachStf(device)
     }
 
-    // 端末の切り替えは URL で行う（一覧の「使う」と同じ入口にそろえる）。閲覧のみで開く
-    $scope.open = function(device, replace) {
-      $location.path('/ios/' + (device.udid || device.id)).search('view', true)
-      if (replace) {
-        $location.replace()
-      }
-    }
 
     $scope.reload = function() {
       if ($scope.current) {
@@ -437,8 +430,13 @@ module.exports =
           $scope.error = 'ios-devices.json に ' + key + ' がありません'
         }
       }
+      // /ios（端末の指定なし）: 端末は STF の端末一覧から選ぶ。1 台だけならそれを閲覧のみで開く
       else if ($scope.devices.length === 1) {
-        $scope.open($scope.devices[0], true)
+        var only = $scope.devices[0]
+        $location.path('/ios/' + (only.udid || only.id)).search('view', true).replace()
+      }
+      else if ($scope.devices.length > 1) {
+        $location.path('/devices').replace()
       }
     }).catch(function() {
       $scope.error = 'iOS 端末の一覧を取得できません'
