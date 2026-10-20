@@ -22,10 +22,17 @@ module.exports = function InstallCtrl(
     if ($files.length) {
       return InstallService.installFile($scope.control, $files)
     }
+    return null
   }
 
-  $scope.uninstall = function(packageName) {
-    // TODO: After clicking uninstall accordion opens
+  $scope.uninstall = function(packageName, $event) {
+    if ($event) {
+      // the button is transcluded into the accordion heading's own anchor, which
+      // both toggles the panel and, with an empty href, reloads the page
+      $event.preventDefault()
+      $event.stopPropagation()
+    }
+
     return $scope.control.uninstall(packageName)
       .then(function() {
         $scope.$apply(function() {
