@@ -1,0 +1,30 @@
+.stf-wifi-devices .stf-wifi-add {
+  margin-bottom: 15px;
+}
+
+.stf-wifi-devices .stf-wifi-add .form-group {
+  margin-right: 5px;
+}
+
+.stf-wifi-devices .stf-wifi-table td {
+  vertical-align: middle;
+}
+
+.stf-wifi-devices .stf-wifi-table .btn {
+  margin-left: 5px;
+}
+
+.stf-wifi-devices .stf-wifi-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #888;
+}
+
+.stf-wifi-devices .stf-wifi-notes {
+  margin-top: 20px;
+  font-size: 12px;
+}
+
+.stf-wifi-devices .selectable {
+  user-select: text;
+}
