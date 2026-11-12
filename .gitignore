@@ -19,3 +19,7 @@ yarn.lock
 
 # 環境ごとの iOS 端末設定（ios-devices.sample.json を複製して使う）
 ios-devices.json
+
+# STF が adb connect する無線 adb の端末一覧（設定画面の「Wi-Fi 端末」タブと起動スクリプトが読み書きする）
+wifi-devices.txt
+wifi-devices.txt.tmp

@@ -35,6 +35,13 @@ module.exports = function SettingsCtrl($scope, gettext, AppState) {
     )
     $scope.settingTabs.push(
       {
+        title: 'Wi-Fi 端末'
+        , icon: 'fa-wifi fa-fw'
+        , templateUrl: 'settings/wifi-devices/wifi-devices.pug'
+      }
+    )
+    $scope.settingTabs.push(
+      {
         title: gettext('Users')
         , icon: 'fa-user fa-fw'
         , templateUrl: 'settings/users/users.pug'

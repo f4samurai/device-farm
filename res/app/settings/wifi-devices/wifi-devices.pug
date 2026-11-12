@@ -1,0 +1,77 @@
+.widget-container.fluid-height.stf-wifi-devices(ng-controller='WifiDevicesCtrl')
+  .heading
+    i.fa.fa-wifi
+    span Wi-Fi 端末（無線 adb）
+
+    button.btn.pull-right.btn-sm.btn-primary-outline(
+      type='button'
+      ng-click='load()'
+      uib-tooltip='読み直す'
+      tooltip-placement='left')
+      i.fa.fa-refresh.fa-fw(ng-class='{"fa-spin": loading}')
+
+  .widget-content.padded
+
+    form.form-inline.stf-wifi-add(ng-submit='add()')
+      .form-group
+        input.form-control.input-sm(
+          type='text'
+          size='36'
+          ng-model='form.address'
+          ng-disabled='busy'
+          placeholder='192.168.1.146 または 192.168.1.146:5555')
+      button.btn.btn-sm.btn-primary(type='submit' ng-disabled='busy || !form.address')
+        i.fa.fa-plus.fa-fw(ng-hide='busy')
+        i.fa.fa-spinner.fa-spin.fa-fw(ng-show='busy')
+        span 追加して接続
+
+    .alert(ng-if='message' ng-class='"alert-" + message.type')
+      span(ng-bind='message.text')
+
+    nothing-to-show(icon='fa-wifi' message='登録された Wi-Fi 端末はありません'
+      ng-if='!devices.length && loaded')
+
+    table.table.table-condensed.stf-wifi-table(ng-if='devices.length')
+      thead
+        tr
+          th アドレス（STF の serial）
+          th adb の状態
+          th STF
+          th
+      tbody
+        tr(ng-repeat='device in devices track by device.address')
+          td.selectable
+            code(ng-bind='device.address')
+          td
+            span.label(ng-class='state(device).cls' ng-bind='state(device).label')
+            .stf-wifi-hint(ng-if='device.adb !== "device" && state(device).hint'
+              ng-bind='state(device).hint')
+          td
+            span(ng-if='device.stf')
+              a(ng-href='#!/control/{{device.address}}?view'
+                ng-bind='device.stf.model || "（機種不明）"')
+              span.text-muted(ng-if='!device.stf.present') （切断）
+              span.text-muted(ng-if='device.stf.owner') （{{device.stf.owner}} が使用中）
+            span.text-muted(ng-if='!device.stf') まだ STF に出ていません
+          td.text-right.text-nowrap
+            button.btn.btn-xs.btn-primary-outline(
+              type='button' ng-click='reconnect(device)' ng-disabled='busy')
+              i.fa.fa-plug.fa-fw
+              span 再接続
+            button.btn.btn-xs.btn-danger-outline(
+              type='button' ng-click='remove(device)' ng-disabled='busy')
+              i.fa.fa-trash-o.fa-fw
+              span 削除
+
+    .stf-wifi-notes.text-muted
+      p 追加する前に端末側で次をしておく（画面からはできない）:
+      ol
+        li 社内の Wi-Fi（f4sap）に繋ぎ、IP を固定する。IP が変わると STF には別の端末として出る
+        li
+          | USB で PC に挿して #[code adb tcpip 5555] を打つ。
+          | 端末を再起動すると消えるので、そのたびに打ち直す
+        li 追加したら、端末の画面に出る「USB デバッグを許可しますか？」で「常に許可」にチェックして許可する
+      p
+        | 一覧は #[code {{file}}] に保存され、STF の起動スクリプトが 60 秒ごとに接続し直す。
+        | 削除しても Jenkins の autotest（別の adb server を使う）には影響しない。
+        | STF に残った端末の記録は「Devices」タブから消せる。
