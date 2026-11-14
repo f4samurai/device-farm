@@ -1,5 +1,6 @@
 /**
-* 無線 adb の端末を管理者が追加・削除する画面（サーバ側は lib/units/app/wifi-devices）
+* 無線 adb の端末を追加・削除する画面（サーバ側は lib/units/app/wifi-devices）。
+* 追加は誰でも、削除は管理者と、その端末を足した人だけ
 **/
 
 var STATES = {
@@ -22,7 +23,7 @@ var STATES = {
   }
 }
 
-module.exports = function WifiDevicesCtrl($scope, $http, $interval, GenericModalService) {
+module.exports = function WifiDevicesCtrl($scope, $http, $interval, GenericModalService, AppState) {
   $scope.devices = []
   $scope.form = {address: ''}
   $scope.busy = false
@@ -32,6 +33,11 @@ module.exports = function WifiDevicesCtrl($scope, $http, $interval, GenericModal
 
   function errorText(res) {
     return (res && res.data && res.data.description) || ('HTTP ' + (res && res.status))
+  }
+
+  $scope.canRemove = function(device) {
+    return AppState.user.privilege === 'admin' ||
+      (!!device.addedBy && device.addedBy === AppState.user.email)
   }
 
   $scope.state = function(device) {

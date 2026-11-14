@@ -37,6 +37,7 @@
           th アドレス（STF の serial）
           th adb の状態
           th STF
+          th 追加した人
           th
       tbody
         tr(ng-repeat='device in devices track by device.address')
@@ -53,13 +54,16 @@
               span.text-muted(ng-if='!device.stf.present') （切断）
               span.text-muted(ng-if='device.stf.owner') （{{device.stf.owner}} が使用中）
             span.text-muted(ng-if='!device.stf') まだ STF に出ていません
+          td
+            span(ng-if='device.addedBy' ng-bind='device.addedBy')
+            span.text-muted(ng-if='!device.addedBy') 起動時の一覧
           td.text-right.text-nowrap
             button.btn.btn-xs.btn-primary-outline(
               type='button' ng-click='reconnect(device)' ng-disabled='busy')
               i.fa.fa-plug.fa-fw
               span 再接続
             button.btn.btn-xs.btn-danger-outline(
-              type='button' ng-click='remove(device)' ng-disabled='busy')
+              type='button' ng-click='remove(device)' ng-disabled='busy' ng-if='canRemove(device)')
               i.fa.fa-trash-o.fa-fw
               span 削除
 
@@ -73,5 +77,6 @@
         li 追加したら、端末の画面に出る「USB デバッグを許可しますか？」で「常に許可」にチェックして許可する
       p
         | 一覧は #[code {{file}}] に保存され、STF の起動スクリプトが 60 秒ごとに接続し直す。
+        | 削除できるのは管理者と、その端末を追加した人だけ。
         | 削除しても Jenkins の autotest（別の adb server を使う）には影響しない。
         | STF に残った端末の記録は「Devices」タブから消せる。

@@ -25,19 +25,19 @@ module.exports = function SettingsCtrl($scope, gettext, AppState) {
       , templateUrl: 'settings/groups/groups.pug'
     }
   )
+  $scope.settingTabs.push(
+    {
+      title: 'Wi-Fi 端末'
+      , icon: 'fa-wifi fa-fw'
+      , templateUrl: 'settings/wifi-devices/wifi-devices.pug'
+    }
+  )
   if (AppState.user.privilege === 'admin') {
     $scope.settingTabs.push(
       {
         title: gettext('Devices')
         , icon: 'fa-mobile stf-settings-tabs-device-icon fa-fw'
         , templateUrl: 'settings/devices/devices.pug'
-      }
-    )
-    $scope.settingTabs.push(
-      {
-        title: 'Wi-Fi 端末'
-        , icon: 'fa-wifi fa-fw'
-        , templateUrl: 'settings/wifi-devices/wifi-devices.pug'
       }
     )
     $scope.settingTabs.push(

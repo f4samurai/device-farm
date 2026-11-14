@@ -2277,10 +2277,10 @@ paths:
     x-swagger-router-controller: wifidevices
     get:
       summary: Wi-Fi device list
-      description: Lists the Wi-Fi (adb tcpip) Android devices that STF connects with adb, with their adb and STF states
+      description: Lists the Wi-Fi (adb tcpip) Android devices that STF connects with adb, with their adb and STF states and who added them
       operationId: getWifiDevices
       tags:
-        - admin
+        - devices
       responses:
         "200":
           description: Wi-Fi devices information
@@ -2290,7 +2290,6 @@ paths:
           description: >
             Unexpected Error:
               * 401: Unauthorized => bad credentials
-              * 403: Forbidden => privileged operation (admin)
               * 500: Internal Server Error
           schema:
             $ref: "#/definitions/UnexpectedErrorResponse"
@@ -2298,10 +2297,10 @@ paths:
         - accessTokenAuth: []
     post:
       summary: Adds a Wi-Fi device
-      description: Adds a Wi-Fi Android device to the list and connects it with adb; if it is already in the list, it only reconnects it. The device must already accept adb over TCP (adb tcpip 5555) and, on the first connection, the USB debugging authorization must be accepted on the device
+      description: Adds a Wi-Fi Android device to the list and connects it with adb; if it is already in the list, it only reconnects it. Any user can add a device, and is recorded as the one who added it. The device must already accept adb over TCP (adb tcpip 5555) and, on the first connection, the USB debugging authorization must be accepted on the device
       operationId: addWifiDevice
       tags:
-        - admin
+        - devices
       parameters:
         - name: device
           in: body
@@ -2319,7 +2318,6 @@ paths:
             Unexpected Error:
               * 400: Bad Request => address is not a private LAN IPv4 address
               * 401: Unauthorized => bad credentials
-              * 403: Forbidden => privileged operation (admin)
               * 500: Internal Server Error
           schema:
             $ref: "#/definitions/UnexpectedErrorResponse"
@@ -2329,10 +2327,10 @@ paths:
     x-swagger-router-controller: wifidevices
     delete:
       summary: Removes a Wi-Fi device
-      description: Removes a Wi-Fi Android device from the list and disconnects it from the adb server of STF; the device record of STF is kept (as disconnected)
+      description: Removes a Wi-Fi Android device from the list and disconnects it from the adb server of STF; the device record of STF is kept (as disconnected). Only an admin or the user who added the device can remove it
       operationId: deleteWifiDevice
       tags:
-        - admin
+        - devices
       parameters:
         - name: address
           in: path
@@ -2348,7 +2346,7 @@ paths:
           description: >
             Unexpected Error:
               * 401: Unauthorized => bad credentials
-              * 403: Forbidden => privileged operation (admin)
+              * 403: Forbidden => neither an admin nor the user who added the device
               * 404: Not Found => the device is not in the list
               * 500: Internal Server Error
           schema:
@@ -2714,6 +2712,9 @@ definitions:
       added:
         description: Whether the device was newly added to the list (only when adding)
         type: boolean
+      addedBy:
+        description: Email of the user who added the device (absent for devices added by the startup script or by hand)
+        type: string
   WifiDeviceListResponse:
     required:
       - success
