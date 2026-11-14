@@ -2305,8 +2305,8 @@ paths:
       parameters:
         - name: device
           in: body
-          description: Address of the device
-          required: true
+          description: Address of the device (required; it is checked by the controller, which answers 400, because a request failing the swagger validation gets no response)
+          required: false
           schema:
             $ref: "#/definitions/WifiDevicePayload"
       responses:
@@ -2690,8 +2690,6 @@ definitions:
         type: string
   WifiDevicePayload:
     description: Payload object for adding a Wi-Fi device
-    required:
-      - address
     properties:
       address:
         description: Private LAN IPv4 address of the device with an optional port (default 5555)
