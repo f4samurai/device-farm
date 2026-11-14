@@ -56,7 +56,7 @@
             span.text-muted(ng-if='!device.stf') まだ STF に出ていません
           td
             span(ng-if='device.addedBy' ng-bind='device.addedBy')
-            span.text-muted(ng-if='!device.addedBy') 起動時の一覧
+            span.text-muted(ng-if='!device.addedBy') 記録なし
           td.text-right.text-nowrap
             button.btn.btn-xs.btn-primary-outline(
               type='button' ng-click='reconnect(device)' ng-disabled='busy')
