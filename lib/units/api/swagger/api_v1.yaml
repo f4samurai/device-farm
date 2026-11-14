@@ -2273,6 +2273,88 @@ paths:
             $ref: "#/definitions/UnexpectedErrorResponse"
       security:
         - accessTokenAuth: []
+  /wifi-devices:
+    x-swagger-router-controller: wifidevices
+    get:
+      summary: Wi-Fi device list
+      description: Lists the Wi-Fi (adb tcpip) Android devices that STF connects with adb, with their adb and STF states
+      operationId: getWifiDevices
+      tags:
+        - admin
+      responses:
+        "200":
+          description: Wi-Fi devices information
+          schema:
+            $ref: "#/definitions/WifiDeviceListResponse"
+        default:
+          description: >
+            Unexpected Error:
+              * 401: Unauthorized => bad credentials
+              * 403: Forbidden => privileged operation (admin)
+              * 500: Internal Server Error
+          schema:
+            $ref: "#/definitions/UnexpectedErrorResponse"
+      security:
+        - accessTokenAuth: []
+    post:
+      summary: Adds a Wi-Fi device
+      description: Adds a Wi-Fi Android device to the list and connects it with adb; if it is already in the list, it only reconnects it. The device must already accept adb over TCP (adb tcpip 5555) and, on the first connection, the USB debugging authorization must be accepted on the device
+      operationId: addWifiDevice
+      tags:
+        - admin
+      parameters:
+        - name: device
+          in: body
+          description: Address of the device
+          required: true
+          schema:
+            $ref: "#/definitions/WifiDevicePayload"
+      responses:
+        "200":
+          description: Device added (or reconnected); its state is in device.adb (device, unauthorized, offline or absent)
+          schema:
+            $ref: "#/definitions/WifiDeviceResponse"
+        default:
+          description: >
+            Unexpected Error:
+              * 400: Bad Request => address is not a private LAN IPv4 address
+              * 401: Unauthorized => bad credentials
+              * 403: Forbidden => privileged operation (admin)
+              * 500: Internal Server Error
+          schema:
+            $ref: "#/definitions/UnexpectedErrorResponse"
+      security:
+        - accessTokenAuth: []
+  /wifi-devices/{address}:
+    x-swagger-router-controller: wifidevices
+    delete:
+      summary: Removes a Wi-Fi device
+      description: Removes a Wi-Fi Android device from the list and disconnects it from the adb server of STF; the device record of STF is kept (as disconnected)
+      operationId: deleteWifiDevice
+      tags:
+        - admin
+      parameters:
+        - name: address
+          in: path
+          description: Address of the device ("192.168.1.146" or "192.168.1.146:5555")
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Device removed and disconnected
+          schema:
+            $ref: "#/definitions/Response"
+        default:
+          description: >
+            Unexpected Error:
+              * 401: Unauthorized => bad credentials
+              * 403: Forbidden => privileged operation (admin)
+              * 404: Not Found => the device is not in the list
+              * 500: Internal Server Error
+          schema:
+            $ref: "#/definitions/UnexpectedErrorResponse"
+      security:
+        - accessTokenAuth: []
   /swagger.json:
     x-swagger-pipe: swagger_raw
 definitions:
@@ -2606,6 +2688,64 @@ definitions:
     properties:
       message:
         type: string
+  WifiDevicePayload:
+    description: Payload object for adding a Wi-Fi device
+    required:
+      - address
+    properties:
+      address:
+        description: Private LAN IPv4 address of the device with an optional port (default 5555)
+        type: string
+  WifiDevice:
+    required:
+      - address
+      - adb
+    properties:
+      address:
+        description: Address of the device, which is also its serial in STF
+        type: string
+      adb:
+        description: State seen by the adb server of STF (device, unauthorized, offline or absent)
+        type: string
+      stf:
+        description: State of the device in STF (present, model, owner), if STF knows it
+        type: object
+      connectError:
+        description: Why adb could not connect the device (only when adding)
+        type: string
+      added:
+        description: Whether the device was newly added to the list (only when adding)
+        type: boolean
+  WifiDeviceListResponse:
+    required:
+      - success
+      - description
+      - file
+      - devices
+    properties:
+      success:
+        type: boolean
+      description:
+        type: string
+      file:
+        description: List file read by STF and its startup script
+        type: string
+      devices:
+        type: array
+        items:
+          $ref: "#/definitions/WifiDevice"
+  WifiDeviceResponse:
+    required:
+      - success
+      - description
+      - device
+    properties:
+      success:
+        type: boolean
+      description:
+        type: string
+      device:
+        $ref: "#/definitions/WifiDevice"
 securityDefinitions:
   accessTokenAuth:
     type: apiKey
