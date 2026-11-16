@@ -549,6 +549,7 @@ var pbjs5Decodings = [
     , cpuPlatform: null
     , openGLESVersion: null
     , marketName: null
+    , notes: null
     }
   }
 ]
